@@ -6,6 +6,7 @@ const win32 = struct {
     usingnamespace @import("win32").zig;
     usingnamespace @import("win32").foundation;
     usingnamespace @import("win32").system.system_services;
+    usingnamespace @import("win32").ui.input.keyboard_and_mouse;
     usingnamespace @import("win32").ui.windows_and_messaging;
     usingnamespace @import("win32").graphics.gdi;
     usingnamespace @import("win32").foundation;
@@ -22,12 +23,22 @@ const GetLastError = std.os.windows.kernel32.GetLastError;
 const window_class_str = L("tmenu_class");
 const window_title = L("tmenu title");
 
+var running = true;
+
 fn wndProc(hwnd: HWND, msg: c_uint, wparam: WPARAM, lparam: LPARAM) callconv(WINAPI) LRESULT {
     switch (msg) {
         win32.WM_DESTROY => {
             win32.PostQuitMessage(win32.WM_QUIT);
         },
         win32.WM_PAINT => {},
+        win32.WM_KEYDOWN => {
+            const char = @intCast(u16, wparam);
+            std.log.info("pressed: {}", .{char});
+            // esc key check
+            if (char == 27) {
+                running = false;
+            }
+        },
         else => {
             return win32.DefWindowProc(hwnd, msg, wparam, lparam);
         },
@@ -59,11 +70,17 @@ pub export fn wWinMain(hInstance: HINSTANCE, hPrevInstance: ?HINSTANCE, pCmdLine
     var msg: win32.MSG = undefined;
     makeWindowClassEx(hInstance);
 
+    const style = win32.WINDOW_STYLE.initFlags(.{
+        .POPUP = 1,
+        .CLIPCHILDREN = 1,
+        .CLIPSIBLINGS = 1,
+    });
+
     var hwnd = win32.CreateWindowExW(
         win32.WS_EX_OVERLAPPEDWINDOW,
         window_class_str,
         window_title,
-        win32.WS_OVERLAPPEDWINDOW,
+        style,
         100,
         120,
         600,
@@ -79,7 +96,7 @@ pub export fn wWinMain(hInstance: HINSTANCE, hPrevInstance: ?HINSTANCE, pCmdLine
 
     std.log.info("{}", .{GetLastError()});
 
-    while (win32.GetMessage(&msg, null, 0, 0) != 0) {
+    while (win32.GetMessage(&msg, null, 0, 0) != 0 and running) {
         _ = win32.TranslateMessage(&msg);
         _ = win32.DispatchMessage(&msg);
     }
