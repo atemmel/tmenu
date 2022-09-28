@@ -8,7 +8,30 @@ import (
 
 const (
 	paddingX = 12
-	paddingY = 6
+	paddingY = 8
+)
+
+var (
+	textColor = sdl.Color{
+		R: 255,
+		G: 255,
+		B: 255,
+		A: 255,
+	}
+
+	backgroundColor = sdl.Color{
+		R: 66,
+		G: 66,
+		B: 82,
+		A: 255,
+	}
+
+	selectedBackgroundColor = sdl.Color{
+		R: 106,
+		G: 106,
+		B: 122,
+		A: 255,
+	}
 )
 
 type Tmenu struct {
@@ -16,6 +39,13 @@ type Tmenu struct {
 	window *sdl.Window
 	renderer *sdl.Renderer
 	font *ttf.Font
+
+	prompt string
+	input string
+	options []string
+	w int32
+	h int32
+	textH int32
 }
 
 func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
@@ -51,6 +81,16 @@ func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 		window: window,
 		renderer: renderer,
 		font: font,
+		prompt: "prompt",
+		input: "",
+		w: int32(w),
+		h: int32(h),
+		textH: int32(font.Ascent() - font.Descent()),
+		options: []string{
+			"A",
+			"B",
+			"C",
+		},
 	}, nil
 }
 
@@ -63,45 +103,76 @@ func (t *Tmenu) IsRunning() bool {
 	return t.running
 }
 
-func (t *Tmenu) Redraw() {
-	//TODO: this
-
-	t.renderer.SetDrawColor(66, 66, 85, 255)
-
-	clr := sdl.Color{
-		R: 255,
-		G: 255,
-		B: 255,
-		A: 255,
+func (t *Tmenu) drawBackground(x, y int32, clr sdl.Color) {
+	inputBackground := sdl.Rect{
+		X: x,
+		Y: y,
+		W: t.w,
+		H: t.textH + paddingY / 2,
 	}
 
-	str := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed egestas mi nec euismod iaculis. Nullam suscipit massa tempor maximus ornare. Sed placerat rhoncus rhoncus. Duis dui purus, commodo ac purus quis, facilisis vehicula ipsum. Aenean mi justo, iaculis ac dapibus in, vestibulum id augue. Sed auctor viverra arcu nec scelerisque. Pellentesque viverra eros ut massa condimentum varius. Etiam quis condimentum metus. Aenean ultrices turpis quis turpis bibendum aliquam. Quisque ut eleifend leo. Sed at nisl at lorem laoreet tincidunt vel non lorem. Suspendisse in turpis quam. Sed aliquet, odio ut eleifend suscipit, risus nisl mollis lorem, et sollicitudin mi tellus at orci. Donec rhoncus mauris ac vulputate lobortis. Vivamus id scelerisque ipsum. Duis ipsum nulla, tincidunt id finibus in, convallis sit amet lorem. 
-`
+	t.renderer.SetDrawColor(clr.R, clr.G, clr.B, clr.A)
+	t.renderer.FillRect(&inputBackground)
+}
 
-	textSurface, err := t.font.RenderUTF8Blended(str, clr)
+func (t *Tmenu) drawText(text string, x, y int32) {
+	textSurface, err := t.font.RenderUTF8Blended(text, textColor)
 	if err != nil {
 		panic(err)
 	}
+	defer textSurface.Free()
 	texture, err := t.renderer.CreateTextureFromSurface(textSurface)
 	if err != nil {
 		panic(err)
 	}
 	defer texture.Destroy()
-	t.renderer.Clear()
 	textSize := textSurface.Bounds().Size()
 	textRect := sdl.Rect{
-		X: paddingX,
-		Y: paddingY,
+		X: x,
+		Y: y,
 		W: int32(textSize.X),
 		H: int32(textSize.Y),
 	}
 
 	t.renderer.Copy(texture, nil, &textRect)
+}
+
+func (t *Tmenu) drawPrompt() {
+	str := fmt.Sprintf("%s: %s", t.prompt, t.input)
+	t.drawRow(0, str, nil)
+}
+
+func (t *Tmenu) drawRow(i int32, content string, clr *sdl.Color) {
+	inputY0 := paddingY + int32(paddingY / 2)
+	inputY1 := inputY0 + (t.textH + paddingY / 2) * i
+
+	if clr != nil {
+		t.drawBackground(0, inputY1 - paddingY / 2, *clr)
+	}
+	t.drawText(content, paddingX, inputY1 - paddingY / 4)
+}
+
+func (t *Tmenu) Redraw() {
+	t.renderer.SetDrawColor(backgroundColor.R, 
+		backgroundColor.G, 
+		backgroundColor.B,
+		backgroundColor.A)
+	t.renderer.Clear()
+
+	t.drawPrompt()
+
+	t.drawRow(1, "b", &selectedBackgroundColor)
+	t.drawRow(2, "c", nil)
+
 	t.renderer.Present()
 }
 
 func (t *Tmenu) quit() {
 	t.running = false
+}
+
+func (t *Tmenu) insertInput(input string) {
+	t.input += input
 }
 
 func (t *Tmenu) PollEvents() (updated bool) {
@@ -117,7 +188,8 @@ func (t *Tmenu) PollEvents() (updated bool) {
 			t.handleKeys(keyEvent)
 			updated = true
 		case *sdl.TextInputEvent:
-			fmt.Println("TextInputEvent:", event.(*sdl.TextInputEvent))
+			textInputEvent := event.(*sdl.TextInputEvent)
+			t.insertInput(textInputEvent.GetText())
 			updated = true
 		case *sdl.TextEditingEvent:
 			fmt.Println("TextEditingEvent:", event.(*sdl.TextEditingEvent))
