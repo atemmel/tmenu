@@ -2,10 +2,12 @@ package main
 
 import (
 	_ "embed"
-	"github.com/veandco/go-sdl2/sdl"
-	"github.com/veandco/go-sdl2/ttf"
+	"fmt"
 	"runtime"
 	"time"
+
+	"github.com/veandco/go-sdl2/sdl"
+	"github.com/veandco/go-sdl2/ttf"
 )
 
 const (
@@ -50,5 +52,9 @@ func main() {
 		if tmenu.PollEvents() {
 			tmenu.Redraw()
 		}
+	}
+	selection := tmenu.GetSelection()
+	if selection != nil {
+		fmt.Println(*selection)
 	}
 }

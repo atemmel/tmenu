@@ -36,6 +36,7 @@ var (
 
 type Tmenu struct {
 	running bool
+	submitted bool
 	window *sdl.Window
 	renderer *sdl.Renderer
 	font *ttf.Font
@@ -79,6 +80,7 @@ func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 
 	return &Tmenu{
 		running: true,
+		submitted: false,
 		window: window,
 		renderer: renderer,
 		font: font,
@@ -164,6 +166,13 @@ func (t *Tmenu) drawRow(i int32, content string, clr *sdl.Color) {
 	t.drawText(content, paddingX, inputY1 - paddingY / 4)
 }
 
+func (t *Tmenu) GetSelection() *string {
+	if len(t.options) == 0 || !t.submitted {
+		return nil
+	}
+	return &t.options[t.selectedIndex]
+}
+
 func (t *Tmenu) Redraw() {
 	t.renderer.SetDrawColor(backgroundColor.R, 
 		backgroundColor.G, 
@@ -173,6 +182,7 @@ func (t *Tmenu) Redraw() {
 
 	t.drawPrompt()
 	t.drawOptions()
+
 	t.renderer.Present()
 }
 
@@ -184,6 +194,18 @@ func (t *Tmenu) insertInput(input string) {
 	t.input += input
 }
 
+func (t *Tmenu) erase() {
+	if len(t.input) == 0 {
+		return
+	}
+	t.input = t.input[0:len(t.input) - 1]
+}
+
+func (t *Tmenu) submit() {
+	t.submitted = true
+	t.quit()
+}
+
 func (t *Tmenu) PollEvents() (updated bool) {
 	updated = false
 	for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -193,9 +215,11 @@ func (t *Tmenu) PollEvents() (updated bool) {
 			updated = true
 		case *sdl.KeyboardEvent:
 			keyEvent := event.(*sdl.KeyboardEvent)
-			fmt.Println("KeyboardEvent:", keyEvent)
-			t.handleKeys(keyEvent)
-			updated = true
+			if keyEvent.Type == sdl.KEYDOWN && keyEvent.Repeat == 0 {
+				fmt.Println("KeyboardEvent:", keyEvent)
+				t.handleKeys(keyEvent)
+				updated = true
+			}
 		case *sdl.TextInputEvent:
 			textInputEvent := event.(*sdl.TextInputEvent)
 			t.insertInput(textInputEvent.GetText())
@@ -208,8 +232,42 @@ func (t *Tmenu) PollEvents() (updated bool) {
 	return updated
 }
 
+func (t *Tmenu) moveCursorUp() {
+	if t.selectedIndex > 0 {
+		t.selectedIndex--
+	} else if len(t.options) > 0 {
+		t.selectedIndex = len(t.options) - 1
+	} else {
+		t.selectedIndex = 0
+	}
+}
+
+func (t *Tmenu) moveCursorDown() {
+	if t.selectedIndex < len(t.options) - 1 {
+		t.selectedIndex++
+	} else {
+		t.selectedIndex = 0
+	}
+}
+
 func (t *Tmenu) handleKeys(key *sdl.KeyboardEvent) {
-	if key.Keysym.Sym == sdl.K_ESCAPE {
+	switch key.Keysym.Sym {
+	case sdl.K_ESCAPE:
 		t.quit()
+	case sdl.K_TAB:
+		shiftDown := key.Keysym.Mod & sdl.KMOD_SHIFT != 0
+		if shiftDown {
+			t.moveCursorUp()
+		} else {
+			t.moveCursorDown()
+		}
+	case sdl.K_UP:
+		t.moveCursorUp()
+	case sdl.K_DOWN:
+		t.moveCursorDown()
+	case sdl.K_BACKSPACE:
+		t.erase()
+	case sdl.K_RETURN:
+		t.submit()
 	}
 }
