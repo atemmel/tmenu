@@ -6,9 +6,15 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
+const (
+	paddingX = 12
+	paddingY = 6
+)
+
 type Tmenu struct {
 	running bool
 	window *sdl.Window
+	renderer *sdl.Renderer
 	font *ttf.Font
 }
 
@@ -33,17 +39,23 @@ func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 	}
 
 	window.Raise()
+	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
+	if err != nil {
+		window.Destroy()
+		return nil, err
+	}
 	sdl.StartTextInput()
 
-
 	return &Tmenu{
-		window: window,
 		running: true,
+		window: window,
+		renderer: renderer,
 		font: font,
 	}, nil
 }
 
 func (t *Tmenu) Destroy() {
+	t.renderer.Destroy()
 	t.window.Destroy()
 }
 
@@ -54,14 +66,7 @@ func (t *Tmenu) IsRunning() bool {
 func (t *Tmenu) Redraw() {
 	//TODO: this
 
-	surface, err := t.window.GetSurface()
-	if err != nil {
-		t.window.Destroy()
-		t.running = false
-		return
-	}
-	surface.SetBlendMode(sdl.BLENDMODE_NONE)
-	surface.FillRect(nil, 0xff444455)
+	t.renderer.SetDrawColor(66, 66, 85, 255)
 
 	clr := sdl.Color{
 		R: 255,
@@ -73,27 +78,26 @@ func (t *Tmenu) Redraw() {
 	str := `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed egestas mi nec euismod iaculis. Nullam suscipit massa tempor maximus ornare. Sed placerat rhoncus rhoncus. Duis dui purus, commodo ac purus quis, facilisis vehicula ipsum. Aenean mi justo, iaculis ac dapibus in, vestibulum id augue. Sed auctor viverra arcu nec scelerisque. Pellentesque viverra eros ut massa condimentum varius. Etiam quis condimentum metus. Aenean ultrices turpis quis turpis bibendum aliquam. Quisque ut eleifend leo. Sed at nisl at lorem laoreet tincidunt vel non lorem. Suspendisse in turpis quam. Sed aliquet, odio ut eleifend suscipit, risus nisl mollis lorem, et sollicitudin mi tellus at orci. Donec rhoncus mauris ac vulputate lobortis. Vivamus id scelerisque ipsum. Duis ipsum nulla, tincidunt id finibus in, convallis sit amet lorem. 
 `
 
-	text, err := t.font.RenderUTF8Solid(str, clr)
+	textSurface, err := t.font.RenderUTF8Blended(str, clr)
 	if err != nil {
 		panic(err)
 	}
-	textSize := text.Bounds().Size()
+	texture, err := t.renderer.CreateTextureFromSurface(textSurface)
+	if err != nil {
+		panic(err)
+	}
+	defer texture.Destroy()
+	t.renderer.Clear()
+	textSize := textSurface.Bounds().Size()
 	textRect := sdl.Rect{
-		X: 0,
-		Y: 0,
+		X: paddingX,
+		Y: paddingY,
 		W: int32(textSize.X),
 		H: int32(textSize.Y),
 	}
-	surfaceBounds := surface.Bounds().Size()
-	surfaceRect := sdl.Rect{
-		X: 0,
-		Y: 0,
-		W: int32(surfaceBounds.X),
-		H: int32(surfaceBounds.Y),
-	}
-	text.Blit(&textRect, surface, &surfaceRect)
 
-	t.window.UpdateSurface()
+	t.renderer.Copy(texture, nil, &textRect)
+	t.renderer.Present()
 }
 
 func (t *Tmenu) quit() {

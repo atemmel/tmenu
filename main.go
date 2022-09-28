@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultWidth = 600
+	defaultWidth = 800
 	defaultHeight = 600
 )
 
@@ -33,7 +33,7 @@ func main() {
 		panic(err)
 	}
 
-	font, err := ttf.OpenFontRW(rw, 1, 12)
+	font, err := ttf.OpenFontRW(rw, 1, 16)
 	if err != nil {
 		panic(err)
 	}
@@ -47,9 +47,8 @@ func main() {
 	tmenu.Redraw()
 	for tmenu.IsRunning() {
 		time.Sleep(167)
-		if !tmenu.PollEvents() {
-			continue
+		if tmenu.PollEvents() {
+			tmenu.Redraw()
 		}
-		tmenu.Redraw()
 	}
 }
