@@ -43,6 +43,7 @@ type Tmenu struct {
 	prompt string
 	input string
 	options []string
+	selectedIndex int
 	w int32
 	h int32
 	textH int32
@@ -91,6 +92,7 @@ func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 			"B",
 			"C",
 		},
+		selectedIndex: 0,
 	}, nil
 }
 
@@ -142,6 +144,16 @@ func (t *Tmenu) drawPrompt() {
 	t.drawRow(0, str, nil)
 }
 
+func (t *Tmenu) drawOptions() {
+	for i, opt := range t.options {
+		var clr *sdl.Color = nil
+		if i == t.selectedIndex {
+			clr = &selectedBackgroundColor
+		} 
+		t.drawRow(int32(i + 1), opt, clr)
+	}
+}
+
 func (t *Tmenu) drawRow(i int32, content string, clr *sdl.Color) {
 	inputY0 := paddingY + int32(paddingY / 2)
 	inputY1 := inputY0 + (t.textH + paddingY / 2) * i
@@ -160,10 +172,7 @@ func (t *Tmenu) Redraw() {
 	t.renderer.Clear()
 
 	t.drawPrompt()
-
-	t.drawRow(1, "b", &selectedBackgroundColor)
-	t.drawRow(2, "c", nil)
-
+	t.drawOptions()
 	t.renderer.Present()
 }
 
