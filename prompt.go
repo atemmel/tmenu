@@ -212,7 +212,6 @@ func (t *Tmenu) PollEvents() (updated bool) {
 		switch event.(type) {
 		case *sdl.QuitEvent:
 			t.quit()
-			updated = true
 		case *sdl.KeyboardEvent:
 			keyEvent := event.(*sdl.KeyboardEvent)
 			if keyEvent.Type == sdl.KEYDOWN && keyEvent.Repeat == 0 {
