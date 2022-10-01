@@ -109,3 +109,56 @@ func TestFilter3(t *testing.T) {
 		}
 	}
 }
+
+func TestFilter4(t *testing.T) {
+	input := "al"
+	alternatives := []string{
+		"Alfons",
+		"Alban",
+		"Nicklas",
+		"Oskar",
+	}
+
+	expected := []string{
+		"Alfons",
+		"Alban",
+		"Nicklas",
+	}
+
+	result := filter(input, alternatives)
+
+	if len(result) != len(expected) {
+		fail(t, expected, result)
+	}
+
+	for i := range result {
+		if result[i] != expected[i] {
+			fail(t, expected, result)
+		}
+	}
+}
+
+func TestFilter5(t *testing.T) {
+	input := "asdf"
+	alternatives := []string{
+		"Alfons",
+		"Alban",
+		"Nicklas",
+		"Oskar",
+	}
+
+	expected := []string{
+	}
+
+	result := filter(input, alternatives)
+
+	if len(result) != len(expected) {
+		fail(t, expected, result)
+	}
+
+	for i := range result {
+		if result[i] != expected[i] {
+			fail(t, expected, result)
+		}
+	}
+}
