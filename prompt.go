@@ -44,13 +44,14 @@ type Tmenu struct {
 	prompt string
 	input string
 	options []string
+	filteredOptions []string
 	selectedIndex int
 	w int32
 	h int32
 	textH int32
 }
 
-func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
+func NewTmenu(w, h int, font *ttf.Font, options []string) (*Tmenu, error) {
 	dm, err := sdl.GetDesktopDisplayMode(0)
 	if err != nil {
 		return nil, err
@@ -78,6 +79,9 @@ func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 	}
 	sdl.StartTextInput()
 
+	filteredOptions := make([]string, len(options))
+	copy(filteredOptions, options)
+
 	return &Tmenu{
 		running: true,
 		submitted: false,
@@ -89,11 +93,8 @@ func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 		w: int32(w),
 		h: int32(h),
 		textH: int32(font.Ascent() - font.Descent()),
-		options: []string{
-			"A",
-			"B",
-			"C",
-		},
+		options: options,
+		filteredOptions: filteredOptions,
 		selectedIndex: 0,
 	}, nil
 }
@@ -147,7 +148,7 @@ func (t *Tmenu) drawPrompt() {
 }
 
 func (t *Tmenu) drawOptions() {
-	for i, opt := range t.options {
+	for i, opt := range t.filteredOptions {
 		var clr *sdl.Color = nil
 		if i == t.selectedIndex {
 			clr = &selectedBackgroundColor
@@ -167,10 +168,10 @@ func (t *Tmenu) drawRow(i int32, content string, clr *sdl.Color) {
 }
 
 func (t *Tmenu) GetSelection() *string {
-	if len(t.options) == 0 || !t.submitted {
+	if len(t.filteredOptions) == 0 || !t.submitted {
 		return nil
 	}
-	return &t.options[t.selectedIndex]
+	return &t.filteredOptions[t.selectedIndex]
 }
 
 func (t *Tmenu) Redraw() {
@@ -192,6 +193,11 @@ func (t *Tmenu) quit() {
 
 func (t *Tmenu) insertInput(input string) {
 	t.input += input
+	t.refilter()
+}
+
+func (t *Tmenu) refilter() {
+	t.filteredOptions = filter(t.input, t.options)
 }
 
 func (t *Tmenu) erase() {
@@ -199,6 +205,7 @@ func (t *Tmenu) erase() {
 		return
 	}
 	t.input = t.input[0:len(t.input) - 1]
+	t.refilter()
 }
 
 func (t *Tmenu) submit() {

@@ -40,7 +40,13 @@ func main() {
 		panic(err)
 	}
 
-	tmenu, err := NewTmenu(defaultWidth, defaultHeight, font)
+	options := []string{
+		"a",
+		"b",
+		"c",
+	}
+
+	tmenu, err := NewTmenu(defaultWidth, defaultHeight, font, options)
 	if err != nil {
 		panic(err)
 	}
