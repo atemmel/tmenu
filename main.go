@@ -40,11 +40,15 @@ func main() {
 		panic(err)
 	}
 
+	/*
 	options := []string{
 		"a",
 		"b",
 		"c",
 	}
+	*/
+
+	options := findExecutablesInPath()
 
 	tmenu, err := NewTmenu(defaultWidth, defaultHeight, font, options)
 	if err != nil {
