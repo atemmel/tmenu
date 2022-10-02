@@ -48,7 +48,7 @@ func main() {
 	}
 	*/
 
-	options := findExecutablesInPath()
+	options := findRunnableThings()
 
 	tmenu, err := NewTmenu(defaultWidth, defaultHeight, font, options)
 	if err != nil {

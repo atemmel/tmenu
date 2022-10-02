@@ -7,6 +7,13 @@ import (
 	"strings"
 )
 
+func findRunnableThings() []string {
+	execs := findExecutablesInPath()
+	//execs := make([]string, 0, 123)
+	shortcuts := findShortcuts()
+	return append(execs, shortcuts...)
+}
+
 func findExecutablesInPath() []string {
 	pathStr := os.Getenv("PATH")
 	paths := strings.Split(pathStr, ";")
@@ -48,4 +55,34 @@ func findExecutablesInDir(dir string) ([]string, error) {
 
 func isExecutable(file fs.FileInfo) bool {
 	return file.Mode() & 0111 != 0 || strings.HasSuffix(file.Name(), ".exe")
+}
+
+var shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
+
+func findShortcuts() []string {
+	shortcuts := findShortcutsInDir(shortcutStr)
+	for i, s := range shortcuts {
+		shortcuts[i] = s[len(shortcutStr) + 1:]
+	}
+	return shortcuts
+}
+
+func findShortcutsInDir(dir string) []string {
+	entries, err := ioutil.ReadDir(dir)
+	if err != nil {
+		panic(err)
+	}
+
+	shortcuts := make([]string, 0, 32)
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirShortcuts := findShortcutsInDir(dir + "\\" + entry.Name())
+			shortcuts = append(shortcuts, dirShortcuts...)
+		} else {
+			shortcuts = append(shortcuts, dir + "\\" + entry.Name())
+		}
+	}
+
+	return shortcuts
 }
