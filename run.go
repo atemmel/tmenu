@@ -5,15 +5,44 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 )
+
+var shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
 
 func Run(t *Tmenu) {
 	options := findRunnableThings()
 	selection := t.Repl(options)
 
-	if selection != nil {
-		fmt.Println(*selection)
+	if selection == nil {
+		return
+	}
+	fmt.Println(*selection)
+
+	if strings.HasSuffix(*selection, ".lnk") {
+		runLnk(*selection)
+	} else {
+		runProg(*selection)
+	}
+}
+
+func runLnk(lnk string) {
+	lnk = shortcutStr + "\\" + lnk
+	fmt.Println("running lnk", lnk)
+	cmd := exec.Command("cmd.exe", "start", lnk)
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func runProg(prog string) {
+	fmt.Println("running prog", prog)
+	cmd := exec.Command(prog)
+	err := cmd.Run()
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -65,8 +94,6 @@ func findExecutablesInDir(dir string) ([]string, error) {
 func isExecutable(file fs.FileInfo) bool {
 	return file.Mode() & 0111 != 0 || strings.HasSuffix(file.Name(), ".exe")
 }
-
-var shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
 
 func findShortcuts() []string {
 	shortcuts := findShortcutsInDir(shortcutStr)
