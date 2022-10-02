@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -51,7 +53,7 @@ type Tmenu struct {
 	textH int32
 }
 
-func NewTmenu(w, h int, font *ttf.Font, options []string) (*Tmenu, error) {
+func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 	dm, err := sdl.GetDesktopDisplayMode(0)
 	if err != nil {
 		return nil, err
@@ -79,9 +81,6 @@ func NewTmenu(w, h int, font *ttf.Font, options []string) (*Tmenu, error) {
 	}
 	sdl.StartTextInput()
 
-	filteredOptions := make([]string, len(options))
-	copy(filteredOptions, options)
-
 	return &Tmenu{
 		running: true,
 		submitted: false,
@@ -93,8 +92,8 @@ func NewTmenu(w, h int, font *ttf.Font, options []string) (*Tmenu, error) {
 		w: int32(w),
 		h: int32(h),
 		textH: int32(font.Ascent() - font.Descent()),
-		options: options,
-		filteredOptions: filteredOptions,
+		options: []string{},
+		filteredOptions: []string{},
 		selectedIndex: 0,
 	}, nil
 }
@@ -276,4 +275,22 @@ func (t *Tmenu) handleKeys(key *sdl.KeyboardEvent) {
 	case sdl.K_RETURN:
 		t.submit()
 	}
+}
+
+func (t *Tmenu) Repl(options []string) *string {
+	filteredOptions := make([]string, len(options))
+	copy(filteredOptions, options)
+
+	t.options= options
+	t.filteredOptions = filteredOptions
+
+	t.Redraw()
+	for t.IsRunning() {
+		time.Sleep(167)
+		if t.PollEvents() {
+			t.Redraw()
+		}
+	}
+
+	return t.GetSelection()
 }

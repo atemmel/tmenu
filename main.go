@@ -2,9 +2,7 @@ package main
 
 import (
 	_ "embed"
-	"fmt"
 	"runtime"
-	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
@@ -40,31 +38,11 @@ func main() {
 		panic(err)
 	}
 
-	/*
-	options := []string{
-		"a",
-		"b",
-		"c",
-	}
-	*/
-
-	options := findRunnableThings()
-
-	tmenu, err := NewTmenu(defaultWidth, defaultHeight, font, options)
+	tmenu, err := NewTmenu(defaultWidth, defaultHeight, font)
 	if err != nil {
 		panic(err)
 	}
 	defer tmenu.Destroy()
 
-	tmenu.Redraw()
-	for tmenu.IsRunning() {
-		time.Sleep(167)
-		if tmenu.PollEvents() {
-			tmenu.Redraw()
-		}
-	}
-	selection := tmenu.GetSelection()
-	if selection != nil {
-		fmt.Println(*selection)
-	}
+	Run(tmenu)
 }

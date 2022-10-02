@@ -1,15 +1,24 @@
 package main
 
 import (
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
 	"strings"
 )
 
+func Run(t *Tmenu) {
+	options := findRunnableThings()
+	selection := t.Repl(options)
+
+	if selection != nil {
+		fmt.Println(*selection)
+	}
+}
+
 func findRunnableThings() []string {
 	execs := findExecutablesInPath()
-	//execs := make([]string, 0, 123)
 	shortcuts := findShortcuts()
 	return append(execs, shortcuts...)
 }
