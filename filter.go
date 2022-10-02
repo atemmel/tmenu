@@ -1,6 +1,8 @@
 package main
 
-import "strings"
+import (
+	"strings"
+)
 
 func filter(input string, alternatives []string) []string {
 	result := make([]string, 0, len(alternatives))
@@ -34,7 +36,7 @@ func matches(matchString string, input string) bool {
 			return false
 		}
 
-		input = strings.Replace("s", "", "", 1)
+		input = strings.Replace(input, string(this), "", 1)
 	}
 	return true
 }
