@@ -68,7 +68,7 @@ func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 		y, 
 		int32(w), 
 		int32(h), 
-		sdl.WINDOW_SHOWN | sdl.WINDOW_BORDERLESS)
+		sdl.WINDOW_SHOWN | sdl.WINDOW_BORDERLESS | sdl.WINDOW_SKIP_TASKBAR)
 	if err != nil {
 		return nil, err
 	}

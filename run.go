@@ -7,9 +7,11 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"golang.org/x/sys/windows"
 )
 
-var shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
+const shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
 
 func Run(t *Tmenu) {
 	options := findRunnableThings()
@@ -29,16 +31,20 @@ func Run(t *Tmenu) {
 
 func runLnk(lnk string) {
 	lnk = shortcutStr + "\\" + lnk
-	fmt.Println("running lnk", lnk)
-	cmd := exec.Command("cmd.exe", "start", lnk)
-	err := cmd.Run()
+	err := shellExecute(lnk)
 	if err != nil {
 		panic(err)
 	}
 }
 
+func shellExecute(lnk string) error {
+	var handle windows.Handle = 0;
+	args := windows.StringToUTF16Ptr(lnk)
+	var show int32 = 9
+	return windows.ShellExecute(handle, nil, args, nil, nil, show)
+}
+
 func runProg(prog string) {
-	fmt.Println("running prog", prog)
 	cmd := exec.Command(prog)
 	err := cmd.Run()
 	if err != nil {
