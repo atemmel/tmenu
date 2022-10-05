@@ -14,6 +14,7 @@ import (
 const shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
 
 func Run(t *Tmenu) {
+	t.Prompt = "run"
 	options := findRunnableThings()
 	selection := t.Repl(options)
 

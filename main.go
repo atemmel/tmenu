@@ -2,6 +2,8 @@ package main
 
 import (
 	_ "embed"
+	"flag"
+	"fmt"
 	"runtime"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -9,12 +11,16 @@ import (
 )
 
 const (
-	defaultWidth = 800
-	defaultHeight = 600
+	defaultWidth = 80
+	defaultHeight = 10
 )
 
 //go:embed fonts/FiraCodeNerdFont-regular.ttf
 var defaultFontBytes []byte
+
+func init() {
+	flag.Parse()
+}
 
 func main() {
 	runtime.LockOSThread()
@@ -44,5 +50,19 @@ func main() {
 	}
 	defer tmenu.Destroy()
 
-	Run(tmenu)
+	args := flag.Args()
+	if len(args) == 0 {
+		fmt.Println("No command provided")
+		return
+	}
+
+	cmd := args[0]
+	if cmd == "run" {
+		Run(tmenu)
+	} else if cmd == "open" {
+		Open(tmenu)
+	} else {
+		fmt.Println("Unrecognized command,", cmd)
+	}
+
 }

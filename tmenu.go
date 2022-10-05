@@ -43,21 +43,33 @@ type Tmenu struct {
 	renderer *sdl.Renderer
 	font *ttf.Font
 
-	prompt string
+	Prompt string
 	input string
 	options []string
 	filteredOptions []string
 	selectedIndex int
 	w int32
 	h int32
+	columns int
+	rows int
 	textH int32
 }
 
-func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
+func NewTmenu(columns, rows int, font *ttf.Font) (*Tmenu, error) {
 	dm, err := sdl.GetDesktopDisplayMode(0)
 	if err != nil {
 		return nil, err
 	}
+
+	textH := int32(font.Height())
+
+	textW, _, err := font.SizeUTF8("A")
+	if err != nil {
+		return nil, err
+	}
+
+	w := int32(textW * columns) + paddingX * 2
+	h := (textH + paddingY) * int32(rows)
 
 	x := dm.W / 2 - int32(w) / 2
 	var y int32 = 100
@@ -87,11 +99,13 @@ func NewTmenu(w, h int, font *ttf.Font) (*Tmenu, error) {
 		window: window,
 		renderer: renderer,
 		font: font,
-		prompt: "prompt",
+		Prompt: "prompt",
 		input: "",
-		w: int32(w),
-		h: int32(h),
-		textH: int32(font.Ascent() - font.Descent()),
+		w: w,
+		h: h,
+		columns: columns,
+		rows: rows,
+		textH: textH,
 		options: []string{},
 		filteredOptions: []string{},
 		selectedIndex: 0,
@@ -142,17 +156,21 @@ func (t *Tmenu) drawText(text string, x, y int32) {
 }
 
 func (t *Tmenu) drawPrompt() {
-	str := fmt.Sprintf("%s: %s", t.prompt, t.input)
+	str := fmt.Sprintf("%s: %s", t.Prompt, t.input)
 	t.drawRow(0, str, nil)
 }
 
 func (t *Tmenu) drawOptions() {
 	for i, opt := range t.filteredOptions {
+		if i >= t.rows {
+			break
+		}
 		var clr *sdl.Color = nil
 		if i == t.selectedIndex {
 			clr = &selectedBackgroundColor
 		} 
 		t.drawRow(int32(i + 1), opt, clr)
+
 	}
 }
 
