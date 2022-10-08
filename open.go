@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/atemmel/tmenu/pkg/tmenu"
 )
@@ -80,16 +83,55 @@ func executeProjectCommand(dir string) {
 }
 
 func findProjects(dir string) []string {
-	projects := findProjectsInDir(dir)
+	t0 := time.Now()
+	projects := findProjectsRecursionBase(dir)
+	t1 := time.Now()
 
 	for i := range projects {
 		projects[i] = projects[i][len(dir)+1:]
 	}
 
+	fmt.Println("time spent finding repositories:", t1.Sub(t0))
+
 	return projects
 }
 
-func findProjectsInDir(dir string) []string {
+func findProjectsRecursionBase(base string) []string {
+	entries, err := ioutil.ReadDir(base)
+	if err != nil {
+		panic(err)
+	}
+
+	directories := []string{}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			directories = append(directories, entry.Name())
+		}
+	}
+
+	projects := []string{}
+	projectsMutex := sync.Mutex{}
+	group := sync.WaitGroup{}
+
+	group.Add(len(directories))
+
+	find := func(dir string) {
+		defer group.Done()
+		newProjects := findProjectsRecursion(dir)
+		projectsMutex.Lock()
+		defer projectsMutex.Unlock()
+		projects = append(projects, newProjects...)
+	}
+
+	for _, dir := range directories {
+		go find(base + "/" + dir)
+	}
+	group.Wait()
+
+	return projects
+}
+
+func findProjectsRecursion(dir string) []string {
 	entries, err := ioutil.ReadDir(dir)
 	if err != nil {
 		panic(err)
@@ -105,7 +147,7 @@ func findProjectsInDir(dir string) []string {
 
 	for _, entry := range entries {
 		if entry.IsDir() {
-			dirProjects := findProjectsInDir(dir + "/" + entry.Name())
+			dirProjects := findProjectsRecursion(dir + "/" + entry.Name())
 			projects = append(projects, dirProjects...)
 		}
 	}
