@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/atemmel/tmenu/pkg/tmenu"
@@ -16,20 +17,68 @@ const (
 	defaultHeight = 10
 )
 
+type Mode int
+
+const (
+	RunMode Mode = iota
+	OpenMode
+	NoneProvidedMode
+	UnknownMode
+)
+
+var (
 //go:embed fonts/FiraCodeNerdFont-regular.ttf
-var defaultFontBytes []byte
+	defaultFontBytes []byte
+	currentMode Mode = UnknownMode
+)
 
 func init() {
 	flag.Parse()
+	args := flag.Args()
+	if len(args) == 0 {
+		currentMode = NoneProvidedMode
+		return
+	}
+	cmd := args[0]
+	switch cmd {
+	case "run":
+		currentMode = RunMode
+	case "open":
+		currentMode = OpenMode
+	default:
+		currentMode = UnknownMode
+	}
 }
 
 func main() {
+	if currentMode == NoneProvidedMode {
+		fmt.Println("No command provided")
+		os.Exit(1)
+	}
+	if currentMode == UnknownMode {
+		fmt.Println("Unknown mode:", flag.Args()[0])
+		os.Exit(2)
+	}
+
+	tmenu := initSdlAndTmenu()
+	defer sdl.Quit()
+	defer tmenu.Destroy()
+
+	switch currentMode {
+		case RunMode:
+			Run(tmenu)
+		case OpenMode:
+			Open(tmenu)
+	}
+}
+
+func initSdlAndTmenu() *tmenu.Tmenu {
 	runtime.LockOSThread()
+
 	//TODO: only init what is needed
 	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
 		panic(err)
 	}
-	defer sdl.Quit()
 
 	if err := ttf.Init(); err != nil {
 		panic(err)
@@ -49,21 +98,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer tmenu.Destroy()
-
-	args := flag.Args()
-	if len(args) == 0 {
-		fmt.Println("No command provided")
-		return
-	}
-
-	cmd := args[0]
-	if cmd == "run" {
-		Run(tmenu)
-	} else if cmd == "open" {
-		Open(tmenu)
-	} else {
-		fmt.Println("Unrecognized command,", cmd)
-	}
-
+	return tmenu
 }
+
