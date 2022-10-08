@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	_ "embed"
 	"flag"
 	"fmt"
@@ -22,6 +23,7 @@ type Mode int
 const (
 	RunMode Mode = iota
 	OpenMode
+	StdinMode
 	NoneProvidedMode
 	UnknownMode
 )
@@ -29,11 +31,45 @@ const (
 var (
 //go:embed fonts/FiraCodeNerdFont-regular.ttf
 	defaultFontBytes []byte
+	stdin []string
 	currentMode Mode = UnknownMode
 )
 
+func readStdin() []string {
+	file, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+	if file.Mode() & os.ModeNamedPipe == 0 {
+		return []string{}
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	lines := []string{}
+	for err == nil {
+		var line string
+		line, err = reader.ReadString('\n')
+		if len(line) > 0 && line[len(line) - 1] == '\n' {
+			line = line[:len(line)-1]
+		} else {
+			continue
+		}
+		if len(line) == 0 {
+			continue
+		}
+		lines = append(lines, line)
+	}
+	return lines
+}
+
 func init() {
 	flag.Parse()
+	stdin = readStdin()
+	if len(stdin) > 0 {
+		currentMode = StdinMode
+		return
+	}
+
 	args := flag.Args()
 	if len(args) == 0 {
 		currentMode = NoneProvidedMode
@@ -69,6 +105,8 @@ func main() {
 			Run(tmenu)
 		case OpenMode:
 			Open(tmenu)
+		case StdinMode:
+			Stdin(tmenu, stdin)
 	}
 }
 

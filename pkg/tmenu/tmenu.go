@@ -250,7 +250,7 @@ func (t *Tmenu) PollEvents() (updated bool) {
 		case *sdl.KeyboardEvent:
 			keyEvent := event.(*sdl.KeyboardEvent)
 			if keyEvent.Type == sdl.KEYDOWN && keyEvent.Repeat == 0 {
-				fmt.Println("KeyboardEvent:", keyEvent)
+				//fmt.Println("KeyboardEvent:", keyEvent)
 				t.handleKeys(keyEvent)
 				updated = true
 			}
@@ -260,7 +260,7 @@ func (t *Tmenu) PollEvents() (updated bool) {
 			t.realignCursor()
 			updated = true
 		case *sdl.TextEditingEvent:
-			fmt.Println("TextEditingEvent:", event.(*sdl.TextEditingEvent))
+			//fmt.Println("TextEditingEvent:", event.(*sdl.TextEditingEvent))
 			t.realignCursor()
 			updated = true
 		}
