@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -22,7 +21,7 @@ func Run(t *tmenu.Tmenu) {
 	if selection == nil {
 		return
 	}
-	fmt.Println(*selection)
+	//fmt.Println(*selection)
 
 	if strings.HasSuffix(*selection, ".lnk") {
 		runLnk(*selection)

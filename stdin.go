@@ -11,5 +11,5 @@ func Stdin(t *tmenu.Tmenu, options []string) {
 	if selection == nil {
 		return
 	}
-	fmt.Print(*selection)
+	fmt.Println(*selection)
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -56,7 +55,7 @@ func Open(t *tmenu.Tmenu) {
 
 	*selection = dir + "/" + *selection + "/"
 	*selection = strings.ReplaceAll(*selection, "\\", "/")
-	fmt.Println(*selection)
+	//fmt.Println(*selection)
 
 	err = WriteHistory(history, cacheDir + "/" + openHistoryFile)
 	if err != nil {

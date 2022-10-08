@@ -33,6 +33,7 @@ var (
 	defaultFontBytes []byte
 	stdin []string
 	currentMode Mode = UnknownMode
+	promptOverride string
 )
 
 func readStdin() []string {
@@ -63,6 +64,7 @@ func readStdin() []string {
 }
 
 func init() {
+	flag.StringVar(&promptOverride, "prompt", "", "Override default prompt title")
 	flag.Parse()
 	stdin = readStdin()
 	if len(stdin) > 0 {
@@ -88,17 +90,21 @@ func init() {
 
 func main() {
 	if currentMode == NoneProvidedMode {
-		fmt.Println("No command provided")
+		fmt.Fprintln(os.Stderr, "No command provided")
 		os.Exit(1)
 	}
 	if currentMode == UnknownMode {
-		fmt.Println("Unknown mode:", flag.Args()[0])
+		fmt.Fprintln(os.Stderr, "Unknown mode:", flag.Args()[0])
 		os.Exit(2)
 	}
 
 	tmenu := initSdlAndTmenu()
 	defer sdl.Quit()
 	defer tmenu.Destroy()
+
+	if promptOverride != "" {
+		tmenu.Prompt = promptOverride
+	}
 
 	switch currentMode {
 		case RunMode:
