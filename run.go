@@ -8,12 +8,13 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/atemmel/tmenu/pkg/tmenu"
 	"golang.org/x/sys/windows"
 )
 
 const shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
 
-func Run(t *Tmenu) {
+func Run(t *tmenu.Tmenu) {
 	t.Prompt = "run"
 	options := findRunnableThings()
 	selection := t.Repl(options)

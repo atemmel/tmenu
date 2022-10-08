@@ -1,10 +1,10 @@
-package main
+package filter
 
 import (
 	"strings"
 )
 
-func filter(input string, alternatives []string) []string {
+func Filter(input string, alternatives []string) []string {
 	result := make([]string, 0, len(alternatives))
 
 	for i := range alternatives {

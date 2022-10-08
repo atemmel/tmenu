@@ -1,9 +1,10 @@
-package main
+package tmenu
 
 import (
 	"fmt"
 	"time"
 
+	"github.com/atemmel/tmenu/pkg/filter"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -52,6 +53,8 @@ type Tmenu struct {
 	h int32
 	columns int
 	rows int
+	topIndex int
+	bottomIndex int
 	textH int32
 }
 
@@ -106,6 +109,8 @@ func NewTmenu(columns, rows int, font *ttf.Font) (*Tmenu, error) {
 		columns: columns,
 		rows: rows,
 		textH: textH,
+		topIndex: 0,
+		bottomIndex: 0,
 		options: []string{},
 		filteredOptions: []string{},
 		selectedIndex: 0,
@@ -161,12 +166,18 @@ func (t *Tmenu) drawPrompt() {
 }
 
 func (t *Tmenu) drawOptions() {
-	for i, opt := range t.filteredOptions {
-		if i >= t.rows {
+	i := 0
+
+	for ; i < t.rows; i++ {
+		if i >= len(t.filteredOptions) {
 			break
 		}
+
+		optIndex := i + t.topIndex
+
+		opt := t.filteredOptions[optIndex]
 		var clr *sdl.Color = nil
-		if i == t.selectedIndex {
+		if optIndex == t.selectedIndex {
 			clr = &selectedBackgroundColor
 		} 
 		t.drawRow(int32(i + 1), opt, clr)
@@ -214,7 +225,7 @@ func (t *Tmenu) insertInput(input string) {
 }
 
 func (t *Tmenu) refilter() {
-	t.filteredOptions = filter(t.input, t.options)
+	t.filteredOptions = filter.Filter(t.input, t.options)
 }
 
 func (t *Tmenu) erase() {
@@ -246,9 +257,11 @@ func (t *Tmenu) PollEvents() (updated bool) {
 		case *sdl.TextInputEvent:
 			textInputEvent := event.(*sdl.TextInputEvent)
 			t.insertInput(textInputEvent.GetText())
+			t.realignCursor()
 			updated = true
 		case *sdl.TextEditingEvent:
 			fmt.Println("TextEditingEvent:", event.(*sdl.TextEditingEvent))
+			t.realignCursor()
 			updated = true
 		}
 	}
@@ -258,19 +271,43 @@ func (t *Tmenu) PollEvents() (updated bool) {
 func (t *Tmenu) moveCursorUp() {
 	if t.selectedIndex > 0 {
 		t.selectedIndex--
-	} else if len(t.options) > 0 {
-		t.selectedIndex = len(t.options) - 1
+		if t.selectedIndex < t.topIndex {
+			t.topIndex--
+			t.bottomIndex--
+		}
+	} else if len(t.filteredOptions) > 0 {
+		t.selectedIndex = len(t.filteredOptions) - 1
+		t.topIndex = len(t.filteredOptions) - t.rows
+		t.bottomIndex = len(t.filteredOptions)
+		if t.topIndex < 0 {
+			t.topIndex = 0
+		}
 	} else {
 		t.selectedIndex = 0
+		t.topIndex = 0
+		t.bottomIndex = t.rows
 	}
 }
 
 func (t *Tmenu) moveCursorDown() {
-	if t.selectedIndex < len(t.options) - 1 {
+	if t.selectedIndex < len(t.filteredOptions) - 1 {
 		t.selectedIndex++
+		if t.selectedIndex >= t.bottomIndex {
+			t.topIndex++
+			t.bottomIndex++
+		}
 	} else {
 		t.selectedIndex = 0
+		t.topIndex = 0
+		t.bottomIndex = t.rows
 	}
+}
+
+func (t *Tmenu) realignCursor() {
+	if t.selectedIndex <= len(t.filteredOptions) {
+		return
+	}
+	t.selectedIndex = len(t.filteredOptions) - 1
 }
 
 func (t *Tmenu) handleKeys(key *sdl.KeyboardEvent) {
@@ -301,6 +338,11 @@ func (t *Tmenu) Repl(options []string) *string {
 
 	t.options= options
 	t.filteredOptions = filteredOptions
+
+	t.bottomIndex = len(t.options)
+	if t.bottomIndex > t.rows {
+		t.bottomIndex = t.rows
+	}
 
 	t.Redraw()
 	for t.IsRunning() {

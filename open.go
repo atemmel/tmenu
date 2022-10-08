@@ -6,11 +6,13 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/atemmel/tmenu/pkg/tmenu"
 )
 
 const openHistoryFile = "tmenu_open_recent.json"
 
-func Open(t *Tmenu) {
+func Open(t *tmenu.Tmenu) {
     dir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)

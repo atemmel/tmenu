@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/atemmel/tmenu/pkg/tmenu"
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
@@ -44,7 +45,7 @@ func main() {
 		panic(err)
 	}
 
-	tmenu, err := NewTmenu(defaultWidth, defaultHeight, font)
+	tmenu, err := tmenu.NewTmenu(defaultWidth, defaultHeight, font)
 	if err != nil {
 		panic(err)
 	}

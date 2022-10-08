@@ -1,4 +1,4 @@
-package main
+package filter
 
 import (
 	"testing"
@@ -22,7 +22,7 @@ func TestEmptyFilter(t *testing.T) {
 		"c",
 	}
 
-	result := filter(input, alternatives)
+	result := Filter(input, alternatives)
 
 	if len(result) != len(expected) {
 		fail(t, expected, result)
@@ -47,7 +47,7 @@ func TestFilter1(t *testing.T) {
 		"a",
 	}
 
-	result := filter(input, alternatives)
+	result := Filter(input, alternatives)
 
 	if len(result) != len(expected) {
 		fail(t, expected, result)
@@ -72,7 +72,7 @@ func TestFilter2(t *testing.T) {
 		"a",
 	}
 
-	result := filter(input, alternatives)
+	result := Filter(input, alternatives)
 
 	if len(result) != len(expected) {
 		fail(t, expected, result)
@@ -97,7 +97,7 @@ func TestFilter3(t *testing.T) {
 	expected := []string{
 	}
 
-	result := filter(input, alternatives)
+	result := Filter(input, alternatives)
 
 	if len(result) != len(expected) {
 		fail(t, expected, result)
@@ -125,7 +125,7 @@ func TestFilter4(t *testing.T) {
 		"Nicklas",
 	}
 
-	result := filter(input, alternatives)
+	result := Filter(input, alternatives)
 
 	if len(result) != len(expected) {
 		fail(t, expected, result)
@@ -150,7 +150,7 @@ func TestFilter5(t *testing.T) {
 	expected := []string{
 	}
 
-	result := filter(input, alternatives)
+	result := Filter(input, alternatives)
 
 	if len(result) != len(expected) {
 		fail(t, expected, result)
