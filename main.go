@@ -119,8 +119,9 @@ func main() {
 func initSdlAndTmenu() *tmenu.Tmenu {
 	runtime.LockOSThread()
 
-	//TODO: only init what is needed
-	if err := sdl.Init(sdl.INIT_EVERYTHING); err != nil {
+	const sdlFlags uint32 = sdl.INIT_EVENTS | sdl.INIT_VIDEO;
+
+	if err := sdl.Init(sdlFlags); err != nil {
 		panic(err)
 	}
 
