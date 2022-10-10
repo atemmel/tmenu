@@ -315,7 +315,7 @@ func (t *Tmenu) handleKeys(key *sdl.KeyboardEvent) {
 	case sdl.K_ESCAPE:
 		t.quit()
 	case sdl.K_TAB:
-		shiftDown := key.Keysym.Mod & sdl.KMOD_SHIFT != 0
+		shiftDown := key.Keysym.Mod & uint16(sdl.KMOD_SHIFT) != 0
 		if shiftDown {
 			t.moveCursorUp()
 		} else {

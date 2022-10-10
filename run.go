@@ -65,20 +65,16 @@ func findExecutablesInPath() []string {
 
 	executables := make([]string, 0, 32)
 	for _, path := range paths {
-		execs, err := findExecutablesInDir(path)
-		if err != nil {
-			panic(err)
-		}
-
+		execs := findExecutablesInDir(path)
 		executables = append(executables, execs...)
 	}
 	return executables
 }
 
-func findExecutablesInDir(dir string) ([]string, error) {
+func findExecutablesInDir(dir string) []string {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
-		return nil, err
+		return []string{}
 	}
 
 	found := make([]string, 0, 16)
@@ -95,7 +91,7 @@ func findExecutablesInDir(dir string) ([]string, error) {
 		found = append(found, file.Name())
 	}
 
-	return found, nil
+	return found
 }
 
 func isExecutable(file fs.FileInfo) bool {

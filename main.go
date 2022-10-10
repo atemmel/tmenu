@@ -39,7 +39,9 @@ var (
 func readStdin() []string {
 	file, err := os.Stdin.Stat()
 	if err != nil {
-		panic(err)
+		//TODO: investigate why this is
+		// this is a weird windows-only fix btw
+		return []string{}
 	}
 	if file.Mode() & os.ModeNamedPipe == 0 {
 		return []string{}
