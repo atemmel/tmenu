@@ -22,7 +22,7 @@ type Mode int
 
 const (
 	RunMode Mode = iota
-	OpenMode
+	ProjectMode
 	StdinMode
 	NoneProvidedMode
 	UnknownMode
@@ -34,6 +34,7 @@ var (
 	stdin []string
 	currentMode Mode = UnknownMode
 	promptOverride string
+	dirOverride string
 )
 
 func readStdin() []string {
@@ -67,6 +68,7 @@ func readStdin() []string {
 
 func init() {
 	flag.StringVar(&promptOverride, "prompt", "", "Override default prompt title")
+	flag.StringVar(&dirOverride, "dir", "", "Override default operating directory")
 	flag.Parse()
 	stdin = readStdin()
 	if len(stdin) > 0 {
@@ -83,8 +85,8 @@ func init() {
 	switch cmd {
 	case "run":
 		currentMode = RunMode
-	case "open":
-		currentMode = OpenMode
+	case "project":
+		currentMode = ProjectMode
 	default:
 		currentMode = UnknownMode
 	}
@@ -111,8 +113,8 @@ func main() {
 	switch currentMode {
 		case RunMode:
 			Run(tmenu)
-		case OpenMode:
-			Open(tmenu)
+		case ProjectMode:
+			Project(tmenu, dirOverride)
 		case StdinMode:
 			Stdin(tmenu, stdin)
 	}
@@ -147,4 +149,3 @@ func initSdlAndTmenu() *tmenu.Tmenu {
 	}
 	return tmenu
 }
-

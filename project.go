@@ -14,10 +14,13 @@ import (
 
 const openHistoryFile = "tmenu_open_recent.json"
 
-func Open(t *tmenu.Tmenu) {
-    dir, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
+func Project(t *tmenu.Tmenu, dir string) {
+	var err error
+	if dir == "" {
+		dir, err = os.UserHomeDir()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	t.Prompt = "open project"
