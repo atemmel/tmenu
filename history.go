@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"sort"
 )
 
@@ -25,6 +26,48 @@ func (h sortEntriesByHistory) Less(i, j int) bool {
 
 func (h sortEntriesByHistory) Swap(i, j int) {
 	h.entries[i], h.entries[j] = h.entries[j], h.entries[i]
+}
+
+func LookupHistory(options []string, path string) (History, []string) {
+	var history History
+	cacheDir, err := os.UserCacheDir()
+	if err == nil {
+		history, err = ReadHistory(cacheDir + "/" + path)
+		if err == nil {
+			in, out := HistorySplit(history, options)
+			SortEntriesByHistory(history, in)
+			options = append(in, out...)
+		} else {
+			//TODO: show error message
+		}
+	} else {
+		//TODO: show another error message
+	}
+
+	if history == nil {
+		history = make(History)
+	}
+
+	return history, options
+}
+
+func AppendHistory(history History, entry string, dir string) {
+	//TODO: this branch can mayyybe be avoided
+	count, ok := history[entry]
+	if !ok {
+		history[entry] = 1
+	} else {
+		history[entry] = count + 1
+	}
+
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		//TODO: show yet another error message
+	}
+	err = WriteHistory(history, cacheDir + "/" + dir)
+	if err != nil {
+		//TODO: show yet another error message
+	}
 }
 
 func ReadHistory(path string) (History, error) {

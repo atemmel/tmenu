@@ -12,16 +12,23 @@ import (
 )
 
 const shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
+const runHistoryFile = "tmenu_run_recent.json"
 
 func Run(t *tmenu.Tmenu) {
 	t.Prompt = "run"
 	options := findRunnableThings()
+
+	history, options := LookupHistory(options, runHistoryFile)
+	_ = history
+
 	selection := t.Repl(options)
 
 	if selection == nil {
 		return
 	}
+
 	//fmt.Println(*selection)
+	AppendHistory(history, *selection, runHistoryFile)
 
 	if strings.HasSuffix(*selection, ".lnk") {
 		runLnk(*selection)

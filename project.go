@@ -12,7 +12,7 @@ import (
 	"github.com/atemmel/tmenu/pkg/tmenu"
 )
 
-const openHistoryFile = "tmenu_open_recent.json"
+const projectHistoryFile = "tmenu_project_recent.json"
 
 func Project(t *tmenu.Tmenu, dir string) {
 	var err error
@@ -26,24 +26,7 @@ func Project(t *tmenu.Tmenu, dir string) {
 	t.Prompt = "open project"
 	options := findProjects(dir)
 
-	var history History
-	cacheDir, err := os.UserCacheDir()
-	if err == nil {
-		history, err = ReadHistory(cacheDir + "/" + openHistoryFile)
-		if err == nil {
-			in, out := HistorySplit(history, options)
-			SortEntriesByHistory(history, in)
-			options = append(in, out...)
-		} else {
-			//TODO: show error message
-		}
-	} else {
-		//TODO: show another error message
-	}
-
-	if history == nil {
-		history = make(History)
-	}
+	history, options := LookupHistory(options, projectHistoryFile)
 
 	selection := t.Repl(options)
 
@@ -51,22 +34,11 @@ func Project(t *tmenu.Tmenu, dir string) {
 		return
 	}
 
-	//TODO: this branch can mayyybe be avoided
-	count, ok := history[*selection]
-	if !ok {
-		history[*selection] = 1
-	} else {
-		history[*selection] = count + 1
-	}
+	AppendHistory(history, *selection, projectHistoryFile)
 
 	*selection = dir + "/" + *selection + "/"
 	*selection = strings.ReplaceAll(*selection, "\\", "/")
 	//fmt.Println(*selection)
-
-	err = WriteHistory(history, cacheDir + "/" + openHistoryFile)
-	if err != nil {
-		//TODO: show yet another error message
-	}
 
 	executeProjectCommand(*selection)
 }
