@@ -11,12 +11,20 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-const shortcutStr = "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
+var shortcutDirs = []string{
+	"C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
+}
 const runHistoryFile = "tmenu_run_recent.json"
 
 func Run(t *tmenu.Tmenu) {
+	cacheDir, err := os.UserConfigDir()
+	if err == nil {
+		startmenuFolder2 := cacheDir + "\\Microsoft\\Windows\\Start Menu\\Programs"
+		shortcutDirs = append(shortcutDirs, startmenuFolder2)
+	}
+
 	t.Prompt = "run"
-	options := findRunnableThings()
+	options, dirMap := findRunnableThings()
 
 	history, options := LookupHistory(options, runHistoryFile)
 	_ = history
@@ -27,18 +35,19 @@ func Run(t *tmenu.Tmenu) {
 		return
 	}
 
-	//fmt.Println(*selection)
 	AppendHistory(history, *selection, runHistoryFile)
 
 	if strings.HasSuffix(*selection, ".lnk") {
-		runLnk(*selection)
+		idx := dirMap[*selection]
+		runLnk(*selection, idx)
 	} else {
 		runProg(*selection)
 	}
 }
 
-func runLnk(lnk string) {
-	lnk = shortcutStr + "\\" + lnk
+func runLnk(lnk string, idx int) {
+	base := shortcutDirs[idx]
+	lnk = base + "\\" + lnk
 	err := shellExecute(lnk)
 	if err != nil {
 		panic(err)
@@ -60,10 +69,10 @@ func runProg(prog string) {
 	}
 }
 
-func findRunnableThings() []string {
+func findRunnableThings() ([]string, map[string]int) {
 	execs := findExecutablesInPath()
-	shortcuts := findShortcuts()
-	return append(execs, shortcuts...)
+	shortcuts, dirMap := findShortcuts()
+	return append(execs, shortcuts...), dirMap
 }
 
 func findExecutablesInPath() []string {
@@ -101,16 +110,19 @@ func findExecutablesInDir(dir string) []string {
 	return found
 }
 
-func isExecutable(file fs.FileInfo) bool {
-	return file.Mode() & 0111 != 0 || strings.HasSuffix(file.Name(), ".exe")
-}
-
-func findShortcuts() []string {
-	shortcuts := findShortcutsInDir(shortcutStr)
-	for i, s := range shortcuts {
-		shortcuts[i] = s[len(shortcutStr) + 1:]
+func findShortcuts() ([]string, map[string]int) {
+	dirMap := make(map[string]int, 128);
+	shortcuts := make([]string, 0, 128)
+	for dirIdx, dir := range shortcutDirs {
+		newShortcuts := findShortcutsInDir(dir)
+		for i, s := range newShortcuts {
+			r := s[len(dir) + 1:]
+			newShortcuts[i] = r
+			dirMap[r] = dirIdx
+		}
+		shortcuts = append(shortcuts, newShortcuts...)
 	}
-	return shortcuts
+	return shortcuts, dirMap
 }
 
 func findShortcutsInDir(dir string) []string {
@@ -131,4 +143,8 @@ func findShortcutsInDir(dir string) []string {
 	}
 
 	return shortcuts
+}
+
+func isExecutable(file fs.FileInfo) bool {
+	return file.Mode() & 0111 != 0 || strings.HasSuffix(file.Name(), ".exe")
 }

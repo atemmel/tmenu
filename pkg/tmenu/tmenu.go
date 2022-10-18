@@ -335,9 +335,8 @@ func (t *Tmenu) handleKeys(key *sdl.KeyboardEvent) {
 func (t *Tmenu) Repl(options []string) *string {
 	filteredOptions := make([]string, len(options))
 	copy(filteredOptions, options)
-
-	t.options= options
 	t.filteredOptions = filteredOptions
+	t.options = options
 
 	t.bottomIndex = len(t.options)
 	if t.bottomIndex > t.rows {
