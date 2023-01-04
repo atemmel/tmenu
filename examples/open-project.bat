@@ -1,3 +1,4 @@
+REM usage: tmenu -path <path> -command 'cmd /C open-project.bat' project
 @echo off
 
 @set wsl_path=

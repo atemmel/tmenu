@@ -31,6 +31,7 @@ var (
 	currentMode Mode = UnknownMode
 	promptOverride string
 	dirOverride string
+	command string
 )
 
 func readStdin() []string {
@@ -65,6 +66,7 @@ func readStdin() []string {
 func init() {
 	flag.StringVar(&promptOverride, "prompt", "", "Override default prompt title")
 	flag.StringVar(&dirOverride, "dir", "", "Override default operating directory")
+	flag.StringVar(&command, "command", "", "Command to run after selecting a project")
 	flag.Parse()
 	stdin = readStdin()
 	if len(stdin) > 0 {
@@ -111,7 +113,7 @@ func main() {
 		case RunMode:
 			Run(&tmenu)
 		case ProjectMode:
-			Project(&tmenu, dirOverride)
+			Project(&tmenu, dirOverride, command)
 		case StdinMode:
 			Stdin(&tmenu, stdin)
 	}

@@ -14,7 +14,7 @@ import (
 
 const projectHistoryFile = "tmenu_project_recent.json"
 
-func Project(t *tmenu.Tmenu, dir string) {
+func Project(t *tmenu.Tmenu, dir, command string) {
 	var err error
 	if dir == "" {
 		dir, err = os.UserHomeDir()
@@ -39,17 +39,20 @@ func Project(t *tmenu.Tmenu, dir string) {
 	*selection = dir + "/" + *selection + "/"
 	*selection = strings.ReplaceAll(*selection, "\\", "/")
 
-	executeProjectCommand(*selection)
+	executeProjectCommand(*selection, command)
 }
 
-func executeProjectCommand(dir string) {
-	command := "cmd /C open-project.bat"
+func executeProjectCommand(dir, command string) {
+	//command := "cmd /C open-project.bat"
 
 	args := strings.Split(command, " ")
 	cmd := args[0]
 	args = append(args[1:], dir)
+	fmt.Println(cmd, args)
 
 	exe := exec.Command(cmd, args...)
+	exe.Stdout = os.Stdout
+	exe.Stderr = os.Stderr
 	err := exe.Run()
 	if err != nil {
 		panic(err)
