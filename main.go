@@ -2,11 +2,9 @@ package main
 
 import (
 	"bufio"
-	_ "embed"
 	"flag"
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/atemmel/tmenu/pkg/tmenu"
 	"github.com/veandco/go-sdl2/sdl"
@@ -29,8 +27,6 @@ const (
 )
 
 var (
-//go:embed fonts/FiraCodeNerdFont-regular.ttf
-	defaultFontBytes []byte
 	stdin []string
 	currentMode Mode = UnknownMode
 	promptOverride string
@@ -102,8 +98,9 @@ func main() {
 		os.Exit(2)
 	}
 
-	tmenu := initSdlAndTmenu()
+	tmenu := tmenu.NewTmenu(defaultWidth, defaultHeight)
 	defer sdl.Quit()
+	defer ttf.Quit()
 	defer tmenu.Destroy()
 
 	if promptOverride != "" {
@@ -112,40 +109,10 @@ func main() {
 
 	switch currentMode {
 		case RunMode:
-			Run(tmenu)
+			Run(&tmenu)
 		case ProjectMode:
-			Project(tmenu, dirOverride)
+			Project(&tmenu, dirOverride)
 		case StdinMode:
-			Stdin(tmenu, stdin)
+			Stdin(&tmenu, stdin)
 	}
-}
-
-func initSdlAndTmenu() *tmenu.Tmenu {
-	runtime.LockOSThread()
-
-	const sdlFlags uint32 = sdl.INIT_EVENTS | sdl.INIT_VIDEO;
-
-	if err := sdl.Init(sdlFlags); err != nil {
-		panic(err)
-	}
-
-	if err := ttf.Init(); err != nil {
-		panic(err)
-	}
-
-	rw, err := sdl.RWFromMem(defaultFontBytes)
-	if err != nil {
-		panic(err)
-	}
-
-	font, err := ttf.OpenFontRW(rw, 1, 16)
-	if err != nil {
-		panic(err)
-	}
-
-	tmenu, err := tmenu.NewTmenu(defaultWidth, defaultHeight, font)
-	if err != nil {
-		panic(err)
-	}
-	return tmenu
 }

@@ -38,7 +38,6 @@ func Project(t *tmenu.Tmenu, dir string) {
 
 	*selection = dir + "/" + *selection + "/"
 	*selection = strings.ReplaceAll(*selection, "\\", "/")
-	//fmt.Println(*selection)
 
 	executeProjectCommand(*selection)
 }

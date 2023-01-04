@@ -1,6 +1,7 @@
 package tmenu
 
 import (
+	_ "embed"
 	"fmt"
 	"time"
 
@@ -8,6 +9,13 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 	"github.com/veandco/go-sdl2/ttf"
 )
+
+var (
+//go:embed fonts/FiraCodeNerdFont-Regular.ttf
+	defaultFontBytes []byte
+)
+
+const sdlFlags = sdl.INIT_EVENTS | sdl.INIT_VIDEO
 
 const (
 	paddingX = 12
@@ -56,65 +64,83 @@ type Tmenu struct {
 	topIndex int
 	bottomIndex int
 	textH int32
+	hasInit bool
 }
 
-func NewTmenu(columns, rows int, font *ttf.Font) (*Tmenu, error) {
+func NewTmenu(columns, rows int) Tmenu {
+	return Tmenu{
+		running: true,
+		submitted: false,
+		window: nil,
+		renderer: nil,
+		font: nil,
+		Prompt: "prompt",
+		input: "",
+		w: 0,
+		h: 0,
+		columns: columns,
+		rows: rows,
+		textH: 0,
+		topIndex: 0,
+		bottomIndex: 0,
+		options: []string{},
+		filteredOptions: []string{},
+		selectedIndex: 0,
+		hasInit: false,
+	}
+}
+
+func (t *Tmenu) init() error {
+	if t.hasInit {
+		return nil
+	}
+	t.hasInit = true
+
+	if sdl.WasInit(sdl.INIT_EVENTS | sdl.INIT_VIDEO) == 0 {
+		initSdl();
+	}
+
+	t.font = loadFont()
+	t.textH = int32(t.font.Height())
+
+	textW, _, err := t.font.SizeUTF8("A")
+	if err != nil {
+		return err
+	}
+
+	t.w = int32(textW * t.columns) + paddingX * 2
+	t.h = (t.textH + paddingY) * int32(t.rows)
+
 	dm, err := sdl.GetDesktopDisplayMode(0)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	textH := int32(font.Height())
-
-	textW, _, err := font.SizeUTF8("A")
-	if err != nil {
-		return nil, err
-	}
-
-	w := int32(textW * columns) + paddingX * 2
-	h := (textH + paddingY) * int32(rows)
-
-	x := dm.W / 2 - int32(w) / 2
+	x := dm.W / 2 - int32(t.w) / 2
 	var y int32 = 100
 
 	window, err := sdl.CreateWindow(
 		"tmenu", 
 		x, 
 		y, 
-		int32(w), 
-		int32(h), 
+		int32(t.w), 
+		int32(t.h), 
 		sdl.WINDOW_SHOWN | sdl.WINDOW_BORDERLESS | sdl.WINDOW_SKIP_TASKBAR)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	window.Raise()
 	renderer, err := sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
 		window.Destroy()
-		return nil, err
+		return err
 	}
 	sdl.StartTextInput()
 
-	return &Tmenu{
-		running: true,
-		submitted: false,
-		window: window,
-		renderer: renderer,
-		font: font,
-		Prompt: "prompt",
-		input: "",
-		w: w,
-		h: h,
-		columns: columns,
-		rows: rows,
-		textH: textH,
-		topIndex: 0,
-		bottomIndex: 0,
-		options: []string{},
-		filteredOptions: []string{},
-		selectedIndex: 0,
-	}, nil
+	t.window = window
+	t.renderer = renderer
+	return nil
 }
 
 func (t *Tmenu) Destroy() {
@@ -250,7 +276,6 @@ func (t *Tmenu) PollEvents() (updated bool) {
 		case *sdl.KeyboardEvent:
 			keyEvent := event.(*sdl.KeyboardEvent)
 			if keyEvent.Type == sdl.KEYDOWN && keyEvent.Repeat == 0 {
-				//fmt.Println("KeyboardEvent:", keyEvent)
 				t.handleKeys(keyEvent)
 				updated = true
 			}
@@ -260,7 +285,6 @@ func (t *Tmenu) PollEvents() (updated bool) {
 			t.realignCursor()
 			updated = true
 		case *sdl.TextEditingEvent:
-			//fmt.Println("TextEditingEvent:", event.(*sdl.TextEditingEvent))
 			t.realignCursor()
 			updated = true
 		}
@@ -333,6 +357,7 @@ func (t *Tmenu) handleKeys(key *sdl.KeyboardEvent) {
 }
 
 func (t *Tmenu) Repl(options []string) *string {
+	t.init()
 	filteredOptions := make([]string, len(options))
 	copy(filteredOptions, options)
 	t.filteredOptions = filteredOptions
