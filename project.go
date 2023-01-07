@@ -48,7 +48,7 @@ func executeProjectCommand(dir, command string) {
 	args := strings.Split(command, " ")
 	cmd := args[0]
 	args = append(args[1:], dir)
-	fmt.Println(cmd, args)
+	fmt.Println("cmd:", cmd, "args:", args)
 
 	exe := exec.Command(cmd, args...)
 	exe.Stdout = os.Stdout
