@@ -115,14 +115,14 @@ func TestFilter4(t *testing.T) {
 	alternatives := []string{
 		"Alfons",
 		"Alban",
-		"Nicklas",
+		"Niklas",
 		"Oskar",
 	}
 
 	expected := []string{
 		"Alfons",
 		"Alban",
-		"Nicklas",
+		"Niklas",
 	}
 
 	result := Filter(input, alternatives)
@@ -143,7 +143,7 @@ func TestFilter5(t *testing.T) {
 	alternatives := []string{
 		"Alfons",
 		"Alban",
-		"Nicklas",
+		"Niklas",
 		"Oskar",
 	}
 
