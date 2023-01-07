@@ -67,8 +67,11 @@ func init() {
 	flag.StringVar(&promptOverride, "prompt", "", "Override default prompt title")
 	flag.StringVar(&dirOverride, "dir", "", "Override default operating directory")
 	flag.StringVar(&command, "command", "", "Command to run after selecting a project")
+	flag.BoolVar(&tmenu.DebugPerformance, "perf", false, "Debug performance (quit after a single window loop iteration)")
 	flag.Parse()
+
 	stdin = readStdin()
+
 	if len(stdin) > 0 {
 		currentMode = StdinMode
 		return

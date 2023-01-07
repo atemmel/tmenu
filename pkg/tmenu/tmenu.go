@@ -13,6 +13,7 @@ import (
 var (
 //go:embed fonts/FiraCodeNerdFont-Regular.ttf
 	defaultFontBytes []byte
+	DebugPerformance = false
 )
 
 const sdlFlags = sdl.INIT_EVENTS | sdl.INIT_VIDEO
@@ -373,6 +374,10 @@ func (t *Tmenu) Repl(options []string) *string {
 		time.Sleep(167)
 		if t.PollEvents() {
 			t.Redraw()
+		}
+
+		if DebugPerformance {
+			break;
 		}
 	}
 
